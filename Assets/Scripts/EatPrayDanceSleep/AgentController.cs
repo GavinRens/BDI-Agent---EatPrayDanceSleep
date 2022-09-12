@@ -8,8 +8,6 @@ public class AgentController : MonoBehaviour
 {
     public List<GameObject> positionsL; // In the inspector, populate the list w/ positions of ascending order, e.g., pos42 before pos43.
     Dictionary<(int,int), GameObject> positionsD;
-    GameObject agent;
-    GameObject actionStatus;
     TextMeshPro actionStatusText;
     public My_HMBDP_Agent hmbdpAgent;
 
@@ -33,7 +31,6 @@ public class AgentController : MonoBehaviour
 
         navMeshAgent = GetComponent<NavMeshAgent>();
 
-        //navMeshAgent.SetDestination(target1.transform.position);
         navMeshAgent.stoppingDistance = 1.9f;
 
         hmbdpAgent = new My_HMBDP_Agent(1f, 0.8f, 10);
@@ -45,15 +42,7 @@ public class AgentController : MonoBehaviour
         waitingToGetPath = false;
 
         actionStatusText = this.gameObject.GetComponentInChildren<TextMeshPro>();
-        //actionStatusText = actionStatus.GetComponent<TextMeshPro>();
-
-        // For testing
-        //rmNode activeNode = hmbdpAgent.RewardMachine.ActiveNode;
-        //Debug.Log("Active node: " + activeNode.name);
-        //foreach (Action act in Agent.Actions)
-        //    foreach (State stt in Agent.States)
-        //        Debug.Log("ImmediateReward for " + act + ", " + stt.name + ": " + hmbdpAgent.ImmediateReward(act, stt, activeNode));
-
+        
         Time.timeScale = 3f;
     }
 
@@ -73,8 +62,7 @@ public class AgentController : MonoBehaviour
             {
                 alreadyPlanning = true;
                 hmbdpAgent.CurrentAction = hmbdpAgent.SelectAction(hmbdpAgent.CurrentState);
-                if(hmbdpAgent.CurrentAction != null)
-                    actionStatusText.text = hmbdpAgent.CurrentAction.ToString();
+                actionStatusText.text = hmbdpAgent.CurrentAction.ToString();
                 Debug.Log("CurrentAction: " + hmbdpAgent.CurrentAction);
 
                 if (hmbdpAgent.isNavigationAction(hmbdpAgent.CurrentAction))
@@ -177,8 +165,5 @@ public class AgentController : MonoBehaviour
         alreadyExecuting = false;
     }
 }
-
-
-
 
 

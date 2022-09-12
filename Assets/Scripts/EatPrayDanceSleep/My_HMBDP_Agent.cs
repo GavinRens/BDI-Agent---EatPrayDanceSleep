@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
+public class My_HMBDP_Agent : HMBDP_Agent
 {
     MCTS mctsPlanner;
 
@@ -51,15 +51,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
 
         foreach (Goal name in Enum.GetValues(typeof(Goal)))
             Goals.Add(name);
-
-        //var goal_15 = new Goal("EatGoal", (1, 5)); // Where the agent eats
-        //var goal_33 = new Goal("SleepGoal", (3, 3)); // Where the agent sleeps
-        //var goal_55 = new Goal("PrayGoal", (5, 5)); // Where the agent prays
-        //var goal_51 = new Goal("DanceGoal", (5, 1)); // Where the agent dances
-        //Goals.Add(goal_15);
-        //Goals.Add(goal_33);
-        //Goals.Add(goal_55);
-        //Goals.Add(goal_51);
     }
 
 
@@ -96,17 +87,12 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     }
 
 
-    // For general well-being / desire satisfaction.
-    // Should be goal-agnostic (??)
     public override float Preference(Action a, State s)
-    //public override float Preference(Goal g, Action a, State s)
     {
         return 0.1f;
     }
 
 
-    // For (conscious) intentions.
-    // Satisfaction of a particular goal might be action dependent.
     public override float Satisfaction(Goal g, Action a, State s)
     {
         float maxDist = -float.MaxValue;
@@ -120,7 +106,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
         if (distTo_51 > maxDist) maxDist = distTo_51;
 
         if (g == Goal.EatGoal)
-        //if (g.position == (1, 5))
         {
             if (a == Action.Eat && s.position == (1, 5))
                 return 1;
@@ -128,7 +113,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
                 return (maxDist - distTo_15) / maxDist / 20;  // division by 4 so that the best sat is not as mush as doing the right action in the right place
         }
         if (g == Goal.SleepGoal)
-        //if (g.position == (3, 3))
         {
             if (a == Action.Sleep && s.position == (3, 3))
                 return 1;
@@ -136,7 +120,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
                 return (maxDist - distTo_33) / maxDist / 20;
         }
         if (g == Goal.PrayGoal)
-        //if (g.position == (5, 5))
         {
             if (a == Action.Pray && s.position == (5, 5))
                 return 1;
@@ -144,7 +127,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
                 return (maxDist - distTo_55) / maxDist / 20;
         }
         if (g == Goal.DanceGoal)
-        //if (g.position == (5, 1))
         {
             if (a == Action.Dance && s.position == (5, 1))
                 return 1;
@@ -153,30 +135,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
         }
         return 0;
     }
-    //public override float Satisfaction(Goal g, Action a, State s)
-    //{
-    //    if (g.position == (1, 5))
-    //    {
-    //        if (a == Action.Eat && s.position == (1, 5))
-    //            return 1;
-    //    }
-    //    if (g.position == (3, 3))
-    //    {
-    //        if (a == Action.Sleep && s.position == (3, 3))
-    //            return 1;
-    //    }
-    //    if (g.position == (5, 5))
-    //    {
-    //        if (a == Action.Pray && s.position == (5, 5))
-    //            return 1;
-    //    }
-    //    if (g.position == (5, 1))
-    //    {
-    //        if (a == Action.Dance && s.position == (5, 1))
-    //            return 1;
-    //    }
-    //    return 0;
-    //}
 
 
     public override (Action, System.ValueTuple) GetPlan(HashSet<Goal> intentions, State s)
@@ -184,12 +142,11 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
         // Must still test adding written plans that can be used before plan generation
         // (Hand-written plans might be unnecessary)
 
-        Action action = SelectAction(s, this);
-        return (action, System.ValueTuple.Create());
+        Action action = SelectAction(s);
+        return (action, ValueTuple.Create());
     }
 
 
-    //protected override float TransitionFunction(State stateFrom, Action action, State stateTo)
     public override float TransitionFunction(State stateFrom, Action action, State stateTo) // public for Model Validation
     {
         if(action == Action.Up)
@@ -236,26 +193,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
             }
         }
 
-        //if (action == Action.No_Op)
-        //    if(stateTo.position == stateFrom.position)
-        //        return 1;
-
-        //if (action == Action.Eat)
-        //    if (stateTo.position == stateFrom.position && stateFrom.position == (1,5))
-        //        return 1;
-
-        //if (action == Action.Dance)
-        //    if (stateTo.position == stateFrom.position && stateFrom.position == (5,1))
-        //        return 1;
-
-        //if (action == Action.Sleep)
-        //    if (stateTo.position == stateFrom.position && stateFrom.position == (3,3))
-        //        return 1;
-
-        //if (action == Action.Pray)
-        //    if (stateTo.position == stateFrom.position && stateFrom.position == (5,5))
-        //        return 1;
-
         if (action == Action.Eat || action == Action.Dance || action == Action.No_Op || action == Action.Sleep || action == Action.Pray)
             if (stateTo.position == stateFrom.position)
                 return 1;
@@ -264,9 +201,9 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     }
 
 
-    public override Action SelectAction(State currentState, Agent agent = null)
+    public override Action SelectAction(State currentState)
     {
-        return mctsPlanner.SelectAction(currentState, this);
+        return mctsPlanner.SelectAction(currentState);
     }
 
 
@@ -298,15 +235,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
         // Find the goal that currently has most intense desire level
         Goal mostIntense = new Goal(); // a temporary value
         float mostIntenseLevel = -float.MaxValue;
-
-        //// But first norrow down the goals to those that are applicable to the current contect
-        //List<Goal> applicableGoals;
-        //if (RewardMachine.ActiveNode.name == "make_n_rest")
-        //    applicableGoals = make_n_rest_Goals;
-        //else if (RewardMachine.ActiveNode.name == "play_n_eat")
-        //    applicableGoals = play_n_eat_Goals;
-        //else
-        //    applicableGoals = Goals; // will not be used
 
         foreach (Goal goal in Goals)
         //foreach (Goal goal in applicableGoals)
@@ -345,7 +273,6 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     public void PrintSatLevelsHistory()
     {
         foreach (Goal g in Intentions)
-        //foreach (Goal g in Goals)
         {
             Debug.Log("SatLevel memory of " + g.ToString());
             Debug.Log(string.Join(", ", SatisfactionLevels[g]));

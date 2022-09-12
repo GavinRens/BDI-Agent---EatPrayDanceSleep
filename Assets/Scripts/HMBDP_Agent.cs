@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public abstract class HMBDP_Agent : Agent, HMBDP_Interface
+public abstract class HMBDP_Agent : Agent, HMBDP_Interface, Planner_Interface
 {
     Random rand;
     static List<Goal> goals;
@@ -105,14 +105,7 @@ public abstract class HMBDP_Agent : Agent, HMBDP_Interface
 
     public abstract void Focus();
 
-
-    // Define the transition function; the probability that an action performed in stateFrom will end up in stateTo
-    //protected abstract float TransitionFunction(State stateFrom, Action action, State stateTo);
     public abstract float TransitionFunction(State stateFrom, Action action, State stateTo); // public for Model Validation
-
-
-    // Define the function that maps action-state pairs to observations
-    //public Observation ObservationFunction(Action a, State s);
 
 
     public void UpdateDesires(Action a, State s)
@@ -198,5 +191,5 @@ public abstract class HMBDP_Agent : Agent, HMBDP_Interface
 
     // For Planner_Interface
 
-    public abstract Action SelectAction(State currentState, Agent agent = null);
+    public abstract Action SelectAction(State currentState);
 }

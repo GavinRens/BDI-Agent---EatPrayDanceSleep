@@ -1,39 +1,16 @@
-using System.Collections;
 using System.Collections.Generic;
 
-// For testing
-//public class MCTS : Planner
-//{
-//    public override Action SelectAction(State s)
-//    {
-//        if (s.number == 0)
-//            return Action.Goal1;
-//        if(s.number == 1)
-//            return Action.Goal2;
-//        return Action.No_Op;
-//    }
-//}
 
 public class MCTS : Planner_Interface
 {
     public float realReturn;
     public static List<Node> Nodes;
 
-    //bool alreadyPlanning;
     HMBDP_Agent agent;
-    //Node currentRootNode;
     System.Random rand;
     List<Action> A_list;
-
-    static float duration1;
-    static float duration2;
-    static float duration3;
-    static float duration4;
-    static float duration5;
     
     static readonly float gamma = Parameters.discountFactor;
-    //public static int I; // iterations per action selection
-
 
     public MCTS(HMBDP_Agent _agent)
     {
@@ -159,15 +136,11 @@ public class MCTS : Planner_Interface
         // Update the average estimate for performing action a in s node n
         n.Q[a] += (q - n.Q[a]) / n.N[a];
 
-        //UnityEngine.Debug.Log("n.Q[a]: " + n.Q[a]);
-        //UnityEngine.Debug.Log("n.N[a]: " + n.N[a]);
-        //UnityEngine.Debug.Log("q: " + q);
-        
         return q;
     }
     
     
-    public Action SelectAction(State state, Agent agentParam = null)
+    public Action SelectAction(State state)
     {
         int I = Parameters.first_I;
         int D = Parameters.maximumNuofActions; // larger D might be detrimental, because w/ long enough episodes, the goal can be reached no matter the first action
@@ -188,7 +161,6 @@ public class MCTS : Planner_Interface
         float maxValue = -float.MaxValue;
         foreach (Action a in agent.Actions)
         {
-            //UnityEngine.Debug.Log("node.Q[" + a.ToString() + "]:" + node.Q[a]);
             if (node.Q[a] > maxValue)
             {
                 maxValue = node.Q[a];
