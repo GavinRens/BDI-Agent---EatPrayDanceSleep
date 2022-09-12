@@ -167,7 +167,7 @@ public class AgentController : MonoBehaviour
             Debug.Log("------------------------------------");
             hmbdpAgent.PrintCurrentIntentions();
             hmbdpAgent.PrintDesireLevels();
-            hmbdpAgent.PrintSatLevels();
+            hmbdpAgent.PrintSatLevelsHistory();
         }
     }
 

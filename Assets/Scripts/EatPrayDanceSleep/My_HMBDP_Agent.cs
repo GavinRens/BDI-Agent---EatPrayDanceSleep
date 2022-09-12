@@ -1,4 +1,4 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -47,14 +47,19 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
 
     public override void DefineGoals()
     {
-        var goal_15 = new Goal("EatGoal", (1, 5)); // Where the agent eats
-        var goal_33 = new Goal("SleepGoal", (3, 3)); // Where the agent sleeps
-        var goal_55 = new Goal("PrayGoal", (5, 5)); // Where the agent prays
-        var goal_51 = new Goal("DanceGoal", (5, 1)); // Where the agent dances
-        Goals.Add(goal_15);
-        Goals.Add(goal_33);
-        Goals.Add(goal_55);
-        Goals.Add(goal_51);
+        // Goals defined via an Enum in separate file
+
+        foreach (Goal name in Enum.GetValues(typeof(Goal)))
+            Goals.Add(name);
+
+        //var goal_15 = new Goal("EatGoal", (1, 5)); // Where the agent eats
+        //var goal_33 = new Goal("SleepGoal", (3, 3)); // Where the agent sleeps
+        //var goal_55 = new Goal("PrayGoal", (5, 5)); // Where the agent prays
+        //var goal_51 = new Goal("DanceGoal", (5, 1)); // Where the agent dances
+        //Goals.Add(goal_15);
+        //Goals.Add(goal_33);
+        //Goals.Add(goal_55);
+        //Goals.Add(goal_51);
     }
 
 
@@ -114,28 +119,32 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
         if (distTo_55 > maxDist) maxDist = distTo_55;
         if (distTo_51 > maxDist) maxDist = distTo_51;
 
-        if (g.position == (1, 5))
+        if (g == Goal.EatGoal)
+        //if (g.position == (1, 5))
         {
             if (a == Action.Eat && s.position == (1, 5))
                 return 1;
             else
                 return (maxDist - distTo_15) / maxDist / 20;  // division by 4 so that the best sat is not as mush as doing the right action in the right place
         }
-        if (g.position == (3, 3))
+        if (g == Goal.SleepGoal)
+        //if (g.position == (3, 3))
         {
             if (a == Action.Sleep && s.position == (3, 3))
                 return 1;
             else
                 return (maxDist - distTo_33) / maxDist / 20;
         }
-        if (g.position == (5, 5))
+        if (g == Goal.PrayGoal)
+        //if (g.position == (5, 5))
         {
             if (a == Action.Pray && s.position == (5, 5))
                 return 1;
             else
                 return (maxDist - distTo_55) / maxDist / 20;
         }
-        if (g.position == (5, 1))
+        if (g == Goal.DanceGoal)
+        //if (g.position == (5, 1))
         {
             if (a == Action.Dance && s.position == (5, 1))
                 return 1;
@@ -322,28 +331,24 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
 
     public void PrintCurrentIntentions()
     {
-        var positions = new List<(int, int)>();
-        foreach (Goal g in Intentions)
-            positions.Add(g.position);
-        Debug.Log("Intentions: " + string.Join(", ", positions));
+        Debug.Log("Intentions: " + string.Join(", ", Intentions));
     }
 
 
     public void PrintDesireLevels()
     {
         foreach (Goal g in Goals)
-            Debug.Log("DesireLevel of " + g.position + ": " + DesireLevel[g].ToString());
+            Debug.Log("DesireLevel of " + g.ToString() + ": " + DesireLevel[g].ToString());
     }
 
 
-    public void PrintSatLevels()
+    public void PrintSatLevelsHistory()
     {
-        float level = -1000f;
-        foreach (Goal g in Goals)
-            if (SatisfactionLevels[g].TryPeek(out level))
-                Debug.Log("SatLevel of " + g.position + ": " + level.ToString());
-            else
-                Debug.Log("SatLevel of " + g.position + ": " + level.ToString());
-
+        foreach (Goal g in Intentions)
+        //foreach (Goal g in Goals)
+        {
+            Debug.Log("SatLevel memory of " + g.ToString());
+            Debug.Log(string.Join(", ", SatisfactionLevels[g]));
+        }
     }
 }
