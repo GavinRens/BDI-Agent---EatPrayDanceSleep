@@ -156,7 +156,7 @@ public abstract class HMBDP_Agent : Agent, HMBDP_Interface
     /// </summary>
     /// <param name="g">The goal (intention) to consider</param>
     /// <returns>true of false</returns>
-    bool ShouldRemove(Goal g)
+    public bool ShouldRemove(Goal g)
     {
         float averageSatLevelChange(Goal gg)
         {
@@ -198,5 +198,5 @@ public abstract class HMBDP_Agent : Agent, HMBDP_Interface
 
     // For Planner_Interface
 
-    public abstract Action SelectAction(State currentState);
+    public abstract Action SelectAction(State currentState, Agent agent = null);
 }

@@ -14,11 +14,11 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
         SpecifyGoalNoncompatabilities();
         foreach (Goal goal in Goals)
         {
-            DesireLevel.Add(goal.name, 1f);
-            SatisfactionLevels.Add(goal.name, new Queue<float>());
+            DesireLevel.Add(goal, 1f);
+            SatisfactionLevels.Add(goal, new Queue<float>());
         }
         InitializeAgentState();
-        InitializeIntentions();
+        InitializeIntentions(new HashSet<Goal> { Goals[0] });
         mctsPlanner = new MCTS(this);
     }
 
@@ -45,7 +45,7 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     }
 
 
-    protected override void DefineGoals()
+    public override void DefineGoals()
     {
         var goal_15 = new Goal("EatGoal", (1, 5)); // Where the agent eats
         var goal_33 = new Goal("SleepGoal", (3, 3)); // Where the agent sleeps
@@ -58,28 +58,30 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     }
 
 
-    protected override void SpecifyGoalWeights()
+    public override void SpecifyGoalWeights()
     {
-        GoalWeight.Add(Goals[0].name, 0.1f); // eats
-        GoalWeight.Add(Goals[1].name, 0.4f); // sleeps
-        GoalWeight.Add(Goals[2].name, 0.65f); // prays
-        GoalWeight.Add(Goals[3].name, 1f); // dances
+        GoalWeight.Add(Goals[0], 0.1f); // eats
+        GoalWeight.Add(Goals[1], 0.4f); // sleeps
+        GoalWeight.Add(Goals[2], 0.65f); // prays
+        GoalWeight.Add(Goals[3], 1f); // dances
     }
 
 
-    protected override void InitializeIntentions()
+    public override void InitializeIntentions(HashSet<Goal> intentions)
     {
-        Intentions.Add(Goals[0]);
+        Intentions.Clear();
+        foreach (Goal g in intentions)
+            Intentions.Add(g);
     }
 
 
-    protected override void SpecifyGoalNoncompatabilities()
+    public override void SpecifyGoalNoncompatabilities()
     {
         // The following spec is simply for testing purposes
-        NonCompatibleGoals.Add(Goals[0].name, new HashSet<Goal> { Goals[2], Goals[3] });
-        NonCompatibleGoals.Add(Goals[1].name, new HashSet<Goal>());
-        NonCompatibleGoals.Add(Goals[2].name, new HashSet<Goal> { Goals[0], Goals[3] });
-        NonCompatibleGoals.Add(Goals[3].name, new HashSet<Goal> { Goals[0], Goals[2] });
+        NonCompatibleGoals.Add(Goals[0], new HashSet<Goal> { Goals[2], Goals[3] });
+        NonCompatibleGoals.Add(Goals[1], new HashSet<Goal>());
+        NonCompatibleGoals.Add(Goals[2], new HashSet<Goal> { Goals[0], Goals[3] });
+        NonCompatibleGoals.Add(Goals[3], new HashSet<Goal> { Goals[0], Goals[2] });
     }
     
     
@@ -168,9 +170,10 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     //}
 
 
-    protected override (Action, System.ValueTuple) GetPlan(HashSet<Goal> intentions, State s)
+    public override (Action, System.ValueTuple) GetPlan(HashSet<Goal> intentions, State s)
     {
         // Must still test adding written plans that can be used before plan generation
+        // (Hand-written plans might be unnecessary)
 
         Action action = SelectAction(s, this);
         return (action, System.ValueTuple.Create());
@@ -252,6 +255,12 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     }
 
 
+    public override Action SelectAction(State currentState, Agent agent = null)
+    {
+        return mctsPlanner.SelectAction(currentState, this);
+    }
+
+
     public override bool isNavigationAction(Action a)
     {
         switch (a)
@@ -263,11 +272,51 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
             default: return false;
         }
     }
-    
-    
-    public Action SelectAction(State currentState, Agent agent = null)
+
+
+    public override void Focus()
     {
-        return mctsPlanner.SelectAction(currentState);
+        var intentions = new HashSet<Goal>(Intentions);
+
+        // Remove intentions that have been satisfied or are unsatisfiable at the moment
+        foreach (Goal inten in intentions)
+            if (ShouldRemove(inten))
+            {
+                SatisfactionLevels[inten].Clear();  // no record of satisfaction levels required for non-intentions
+                Intentions.Remove(inten);
+            }
+
+        // Find the goal that currently has most intense desire level
+        Goal mostIntense = new Goal(); // a temporary value
+        float mostIntenseLevel = -float.MaxValue;
+
+        //// But first norrow down the goals to those that are applicable to the current contect
+        //List<Goal> applicableGoals;
+        //if (RewardMachine.ActiveNode.name == "make_n_rest")
+        //    applicableGoals = make_n_rest_Goals;
+        //else if (RewardMachine.ActiveNode.name == "play_n_eat")
+        //    applicableGoals = play_n_eat_Goals;
+        //else
+        //    applicableGoals = Goals; // will not be used
+
+        foreach (Goal goal in Goals)
+        //foreach (Goal goal in applicableGoals)
+        {
+            if (DesireLevel[goal] > mostIntenseLevel)
+            {
+                mostIntense = goal;
+                mostIntenseLevel = DesireLevel[goal];
+            }
+        }
+
+        // If the most intense goal is not already an intention and there is not an intention in the set that is incompatible w/ the most intense goal
+        intentions = new HashSet<Goal>(Intentions);
+        intentions.IntersectWith(NonCompatibleGoals[mostIntense]);
+        if (!Intentions.Contains(mostIntense) && intentions.Count == 0)
+        {
+            Intentions.Add(mostIntense);
+            SatisfactionLevels[mostIntense].Clear();  // to double-check to start a fresh record of satisfaction levels for mostIntense
+        }
     }
 
 
@@ -283,7 +332,7 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     public void PrintDesireLevels()
     {
         foreach (Goal g in Goals)
-            Debug.Log("DesireLevel of " + g.position + ": " + DesireLevel[g.name].ToString());
+            Debug.Log("DesireLevel of " + g.position + ": " + DesireLevel[g].ToString());
     }
 
 
@@ -291,7 +340,7 @@ public class My_HMBDP_Agent : HMBDP_Agent, Planner_Interface
     {
         float level = -1000f;
         foreach (Goal g in Goals)
-            if (SatisfactionLevels[g.name].TryPeek(out level))
+            if (SatisfactionLevels[g].TryPeek(out level))
                 Debug.Log("SatLevel of " + g.position + ": " + level.ToString());
             else
                 Debug.Log("SatLevel of " + g.position + ": " + level.ToString());

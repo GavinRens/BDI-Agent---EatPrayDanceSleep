@@ -14,7 +14,7 @@ public class ModelValidation : MonoBehaviour
         Debug.Log("-------- START TRANS FUNC VALIDATION --------");
 
         foreach(State s in Agent.States)
-            foreach(Action a in Agent.Actions)
+            foreach(Action a in agent.Actions)
             {
                 float mass = 0;
                 foreach (State ss in Agent.States)
