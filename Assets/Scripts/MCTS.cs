@@ -10,7 +10,7 @@ public class MCTS : Planner_Interface
     System.Random rand;
     List<Action> A_list;
     
-    static readonly float gamma = Parameters.discountFactor;
+    static readonly float gamma = Parameters.DISCOUNT_FACTOR;
 
     public MCTS(HMBDP_Agent _agent)
     {
@@ -142,8 +142,8 @@ public class MCTS : Planner_Interface
     
     public Action SelectAction(State state)
     {
-        int I = Parameters.first_I;
-        int D = Parameters.maximumNuofActions; // larger D might be detrimental, because w/ long enough episodes, the goal can be reached no matter the first action
+        int I = Parameters.ITERATIONS;
+        int D = Parameters.MAX_NUOF_ACTIONS; // larger D might be detrimental, because w/ long enough episodes, the goal can be reached no matter the first action
 
         Node node = new Node(state, agent);
         //UnityEngine.Debug.Log("agent.RewardMachine.ActiveNode.name: " + agent.RewardMachine.ActiveNode.name);

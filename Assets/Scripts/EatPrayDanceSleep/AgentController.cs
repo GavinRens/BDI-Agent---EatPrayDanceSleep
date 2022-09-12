@@ -102,7 +102,7 @@ public class AgentController : MonoBehaviour
                 //Debug.Log("remainingDistance: " + navMeshAgent.remainingDistance);
                 //Debug.Log("hasPath: " + navMeshAgent.hasPath);
 
-                if (navMeshAgent.remainingDistance < Parameters.atTargetDistance)
+                if (navMeshAgent.remainingDistance < Parameters.AT_TARGET_DISTANCE)
                 {
                     navMeshAgent.ResetPath();
                     phase = Phase.Updating;
