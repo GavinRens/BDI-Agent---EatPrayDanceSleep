@@ -8,7 +8,7 @@ I implemented a Monte Carlo Tree Search (MCTS) planner, which plans over the cur
 
 ## Video
 
-Notice that sometimes the agents do the 'wrong' thing, e.g. eating in the disco or praying before reaching the place of worship. This could be 'fixed' with some work in the code, but i left it as is for now to show some *emergent* bahavior.
+Notice that sometimes the agents do the 'wrong' thing, e.g. eating in the disco or praying before reaching the place of worship. This could be 'fixed' with some work in the code, but i left it as is for now to show some *emergent* bahavior. Goals are given the following weights/importance (between 0 and 1): 0.1 for eating, 0.4 for sleeping, 0.65 for praying, and 1 for dancing. This explains why the agents eat relatively seldomly and why they dance so often.
 
 [eatpraydancesleep_005.webm](https://user-images.githubusercontent.com/41202408/189694579-67c9c756-ad30-40d6-88d8-7af6991a227f.webm)
 
