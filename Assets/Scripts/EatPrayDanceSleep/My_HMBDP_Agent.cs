@@ -137,7 +137,7 @@ public class My_HMBDP_Agent : HMBDP_Agent
     }
 
 
-    public override (Action, System.ValueTuple) GetPlan(HashSet<Goal> intentions, State s)
+    public override (Action, ValueTuple) GetPlan(HashSet<Goal> intentions, State s)
     {
         // Must still test adding written plans that can be used before plan generation
         // (Hand-written plans might be unnecessary)
