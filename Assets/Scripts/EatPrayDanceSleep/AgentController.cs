@@ -67,7 +67,7 @@ public class AgentController : MonoBehaviour
 
                 if (hmbdpAgent.isNavigationAction(hmbdpAgent.CurrentAction))
                 {
-                    State nextState = Environment.GetNextState(hmbdpAgent.CurrentState, hmbdpAgent.CurrentAction);
+                    State nextState = Environment.GetRealNextState(hmbdpAgent.CurrentState, hmbdpAgent.CurrentAction);
                     int x = nextState.position.Item1;
                     int y = nextState.position.Item2;
                     navMeshAgent.SetDestination(positionsD[(x,y)].transform.position);
@@ -148,7 +148,7 @@ public class AgentController : MonoBehaviour
             hmbdpAgent.MaintainSatisfactionLevels(hmbdpAgent.CurrentAction, hmbdpAgent.CurrentState);
             hmbdpAgent.Focus();
 
-            hmbdpAgent.CurrentState = Environment.GetNextState(hmbdpAgent.CurrentState, hmbdpAgent.CurrentAction); ;
+            hmbdpAgent.CurrentState = Environment.GetRealNextState(hmbdpAgent.CurrentState, hmbdpAgent.CurrentAction); ;
             phase = Phase.Planning;
 
             // Printouts for debugging and validation
