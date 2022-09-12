@@ -2,15 +2,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public abstract class HMBDP_Agent : Agent
+public abstract class HMBDP_Agent : Agent, HMBDP_Interface
 {
     Random rand;
     static List<Goal> goals;
-    static Dictionary<string, HashSet<Goal>> nonCompatibleGoals;
+    static Dictionary<Goal, HashSet<Goal>> nonCompatibleGoals;
     HashSet<Goal> intentions;
-    Dictionary<string, float> desireLevel;
-    Dictionary<string, float> goalWeight;
-    Dictionary<string, Queue<float>> satisfactionLevels;  // Every goal has a record of (the most recent) at most MRY sat levels, i.e., every queue is at most MRY long
+    Dictionary<Goal, float> desireLevel;
+    Dictionary<Goal, float> goalWeight;
+    Dictionary<Goal, Queue<float>> satisfactionLevels;  // Every goal has a record of (the most recent) at most MRY sat levels, i.e., every queue is at most MRY long
     float intentionSimilarityThreshold;
     float satisfactionThreshold;
     int memoryCapacity;
@@ -19,29 +19,44 @@ public abstract class HMBDP_Agent : Agent
     {
         rand = new Random();
         goals = new List<Goal>();// Define class Goal, that inherits from State, in the code (and same namespace) instantiating this HMBDP. Goals is static because we assume that HMBDP agents have the same goals
-        goalWeight = new Dictionary<string, float>();
-        nonCompatibleGoals = new Dictionary<string, HashSet<Goal>>();
+        goalWeight = new Dictionary<Goal, float>();
+        nonCompatibleGoals = new Dictionary<Goal, HashSet<Goal>>();
         intentions = new HashSet<Goal>();
-        desireLevel = new Dictionary<string, float>();
-        satisfactionLevels = new Dictionary<string, Queue<float>>();// Every goal has a record of (the most recent) at most MRY sat levels, i.e., every queue is at most MRY long
+        desireLevel = new Dictionary<Goal, float>();
+        satisfactionLevels = new Dictionary<Goal, Queue<float>>();// Every goal has a record of (the most recent) at most MRY sat levels, i.e., every queue is at most MRY long
         intentionSimilarityThreshold = _intentionSimilarityThreshold;
         satisfactionThreshold = _satisfactionThreshold;
         memoryCapacity = _memoryCapacity;
     }
-    
-    //static HashSet<Action> Actions { get; }  // Define enum Action in the code (and same namespace) instantiating this HMBDP
-     //static List<Observation> Observations { get; }  // Define enum Observation in the code (and same namespace) instantiating this HMBDP
-     //static List<State> States { get; }  // Define class State in the code (and same namespace) instantiating this HMBDP
 
+
+    // For Agent (other methods to be implemented in final agent instance)
+
+    public override State GetNextState(Action a, State s)
+    {
+        float r = (float)rand.NextDouble();
+        float mass = 0;
+        foreach (State ss in States)
+        {
+            mass += TransitionFunction(s, a, ss);
+            if (r <= mass)
+                return ss;
+        }
+        return new State();
+    }
+    
+    
+    // For HMBDP_Interface
+    
     public static List<Goal> Goals
     {
         get { return goals; }
     }
-    public Dictionary<string, float> GoalWeight
+    public Dictionary<Goal, float> GoalWeight
     {
         get { return goalWeight; }
     }
-    public Dictionary<string, HashSet<Goal>> NonCompatibleGoals
+    public Dictionary<Goal, HashSet<Goal>> NonCompatibleGoals
     {
         get { return nonCompatibleGoals; }
     }
@@ -49,11 +64,11 @@ public abstract class HMBDP_Agent : Agent
     {
         get { return intentions; }
     }
-    public Dictionary<string, float> DesireLevel 
+    public Dictionary<Goal, float> DesireLevel 
     { 
         get { return desireLevel; }
     }
-    public Dictionary<string, Queue<float>> SatisfactionLevels 
+    public Dictionary<Goal, Queue<float>> SatisfactionLevels 
     {
         get { return satisfactionLevels; }
     }   
@@ -70,77 +85,52 @@ public abstract class HMBDP_Agent : Agent
         get { return memoryCapacity; }
     }
 
-    // Specify what the goals are
-    protected abstract void DefineGoals();
+    public abstract void DefineGoals();
 
-    // Specify the importance / weight of each goal
-    protected abstract void SpecifyGoalWeights();
+    public abstract void SpecifyGoalWeights();
 
-    // Specify goal (in)compatabilities
-    protected abstract void SpecifyGoalNoncompatabilities();
+    public abstract void SpecifyGoalNoncompatabilities();
 
-    // Initialize intentions
-    protected abstract void InitializeIntentions();
+    public abstract void InitializeIntentions(HashSet<Goal> intentions);
 
-    // Define preference function; return a value between 0 and 1, representing how much a performed in s brings the agent closer to g
     public abstract float Preference(Action a, State s);
 
-    // Define cost function; return a value between 0 and 1
     public abstract float Cost(Action a, State s);
 
-    // Define satisfaction function; return a value between 0 and 1, representing how satisfied the agent is in s w.r.t. g
     public abstract float Satisfaction(Goal g, Action a, State s);
 
-    // Define the function that returns a plan, given a set of intentions and the current state
-    protected abstract (Action, ValueTuple) GetPlan(HashSet<Goal> intentions, State s);
+    public abstract (Action, System.ValueTuple) GetPlan(HashSet<Goal> intentions, State s);
+
+    public abstract bool isNavigationAction(Action a);
+
+    public abstract void Focus();
+
 
     // Define the transition function; the probability that an action performed in stateFrom will end up in stateTo
     //protected abstract float TransitionFunction(State stateFrom, Action action, State stateTo);
     public abstract float TransitionFunction(State stateFrom, Action action, State stateTo); // public for Model Validation
 
-    // Specify, for every action, whether an actions implies that the agent must move its position (i.e. navigate)
-    public abstract bool isNavigationAction(Action a);
 
     // Define the function that maps action-state pairs to observations
     //public Observation ObservationFunction(Action a, State s);
 
 
-    public override State GetNextState(Action action, State state)
-    {
-        float r = (float)rand.NextDouble();
-        float mass = 0;
-        foreach (State ss in States)
-        {
-            mass += TransitionFunction(state, action, ss);
-            if (r <= mass)
-                return ss;
-        }
-        return null;
-    }
-    
-    // Define the desire update rule that updates the desire level of any goal
-    //public void UpdateDesire(Goal g, Action a, State s)
-    //{
-    //    // With this definition of the rule, the desire level of goals that are intentions cannot change
-    //    DesireLevel[g] += (1 - IsIntention(g)) * GoalWeight[g] * (0.5f - Satisfaction(g, a, s));
-    //}
     public void UpdateDesires(Action a, State s)
     {
-        foreach (KeyValuePair<string, float> kvp in GoalWeight)
-            UnityEngine.Debug.Log("kvp in GoalWeight: " + kvp.Key + ", " + kvp.Value);
-        
+        //foreach (KeyValuePair<string, float> kvp in GoalWeight)
+        //    UnityEngine.Debug.Log("kvp in GoalWeight: " + kvp.Key + ", " + kvp.Value);
+
         foreach (Goal g in Goals)
         {
-            float w = GoalWeight[g.name];
-            DesireLevel[g.name] += w - Satisfaction(g, a, s) * (DesireLevel[g.name] + w);
+            float w = GoalWeight[g];
+            DesireLevel[g] += w - Satisfaction(g, a, s) * (DesireLevel[g] + w);
+            //DesireLevel[g] += (1 - IsIntention(g)) * GoalWeight[g] * (0.5f - Satisfaction(g, a, s));
             //DesireLevel[g.name] += w * (1f - Satisfaction(g, a, s)) + (1 - DesireLevel[g.name]) * Satisfaction(g, a, s);
             //DesireLevel[g] += GoalWeight[g] * MathF.Exp(1/ memoryCapacity - Satisfaction(g, a, s) * DesireLevel[g]) * (1f - Satisfaction(g, a, s));
         }
-
     }
 
 
-    // Return 1 iff g is currently an intention
     public int IsIntention(Goal g)
     {
         if(Intentions.Contains(g))
@@ -150,63 +140,50 @@ public abstract class HMBDP_Agent : Agent
     }
 
 
-    // Define how satisfaction levels are recorded
-    //public void MaintainSatisfactionLevelsOf(Goal g, Action a, State s)
-    //{
-    //    SatisfactionLevels[g.name].Enqueue(Satisfaction(g, a, s));
-    //    if(SatisfactionLevels[g.name].Count > MemoryCapacity)
-    //        SatisfactionLevels[g.name].Dequeue();
-    //}
     public void MaintainSatisfactionLevels(Action a, State s)
     {
         foreach (Goal g in Intentions)
         {
-            SatisfactionLevels[g.name].Enqueue(Satisfaction(g, a, s));
-            if (SatisfactionLevels[g.name].Count > MemoryCapacity)
-                SatisfactionLevels[g.name].Dequeue();
+            SatisfactionLevels[g].Enqueue(Satisfaction(g, a, s));
+            if (SatisfactionLevels[g].Count > MemoryCapacity)
+                SatisfactionLevels[g].Dequeue();
         }
     }
 
 
-    // Define the function that refocuses on a new set of intentions when applicable
-    public void Focus()
+    /// <summary>
+    /// Whether a goal should no longer be an intention
+    /// </summary>
+    /// <param name="g">The goal (intention) to consider</param>
+    /// <returns>true of false</returns>
+    bool ShouldRemove(Goal g)
     {
-        var intentions = new HashSet<Goal>(Intentions);
-
-        // Remove intentions that have been satisfied or are unsatisfiable at the moment
-        foreach (Goal inten in intentions)
-            if (ShouldRemove(inten))
-            {
-                SatisfactionLevels[inten.name].Clear();  // no record of satisfaction levels required for non-intentions
-                Intentions.Remove(inten);
-            }
-                
-
-        // Find the goal that currently has most intense desire level
-        Goal mostIntense = null;
-        float mostIntenseLevel = -float.MaxValue;
-        foreach(Goal goal in Goals)
+        float averageSatLevelChange(Goal gg)
         {
-            if (DesireLevel[goal.name] > mostIntenseLevel)
-            {
-                mostIntense = goal;
-                mostIntenseLevel = DesireLevel[goal.name];
-            }
+            float total = 0f;
+            var satLevelsList = new List<float>(SatisfactionLevels[gg]);
+            for (int i = 1; i < satLevelsList.Count; i++)
+                total += satLevelsList[i] - satLevelsList[i - 1];
+            return total / (satLevelsList.Count - 1);
         }
 
-        // If the most intense goal is not already an intention and there is not an intention in the set that is incompatible w/ the most intense goal
-        intentions = new HashSet<Goal>(Intentions);
-        intentions.IntersectWith(NonCompatibleGoals[mostIntense.name]);
-        if (!Intentions.Contains(mostIntense) && intentions.Count == 0)
-        {
-            Intentions.Add(mostIntense);
-            SatisfactionLevels[mostIntense.name].Clear();  // to double-check to start a fresh record of satisfaction levels for mostIntense
-        }
+        if (SatisfactionLevels[g].Count < MemoryCapacity)
+            return false; // not enough time has been spend pursuing g
+        else if (averageSatLevelChange(g) < SatisfactionThreshold)
+            return true; // g is not being satisfied
+        else
+            return false; // g is being satisfied
     }
 
-    
+
+    /// <summary>
+    /// Helps decide which stores (hand-written?) plan to select, given the current set of intentions
+    /// </summary>
+    /// <param name="intentions1">Set of intentions</param>
+    /// <param name="intentions2">Set of intentions</param>
+    /// <returns>true or false</returns>
     bool DoMatch(HashSet<Goal> intentions1, HashSet<Goal> intentions2)
-    {// used when selecting plan
+    {
         float similarty = 0f;
         HashSet<Goal> intersection = new HashSet<Goal> (intentions1);
         HashSet<Goal> union = new HashSet<Goal> (intentions1);
@@ -217,25 +194,9 @@ public abstract class HMBDP_Agent : Agent
             return true;
         return false;
     }
-        
 
-    bool ShouldRemove(Goal g)
-    {// used in Focus()
 
-        float averageSatLevelChange(Goal gg)
-        {
-            float total = 0f;
-            var satLevelsList = new List<float>(SatisfactionLevels[gg.name]);
-            for(int i = 1; i < satLevelsList.Count; i++)
-                total += satLevelsList[i] - satLevelsList[i-1];
-            return total / (satLevelsList.Count-1);
-        }
+    // For Planner_Interface
 
-        if (SatisfactionLevels[g.name].Count < MemoryCapacity)
-            return false; // not enough time has been spend pursuing g
-        else if (averageSatLevelChange(g) < SatisfactionThreshold)
-            return true; // g is not being satisfied
-        else
-            return false; // g is being satisfied
-    }
+    public abstract Action SelectAction(State currentState);
 }
