@@ -1,7 +1,5 @@
-using UnityEngine;
 
-
-public class Environment : MonoBehaviour
+public class Environment
 {
     /// <summary>
     /// The state the agent will end up in if it executes the action in the current state
