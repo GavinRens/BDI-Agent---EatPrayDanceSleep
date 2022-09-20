@@ -67,8 +67,6 @@ Found in Parameters.cs
 - AT_TARGET_DISTANCE is used in the agent controller to specify at what distance we consider an agent to have arrived at a target.
 
 ## Environment design
-A book can be written about this topic.
-
 The agent should be designed on paper first. This is an iterative process that should be done before any coding. When implementing the agent with code, some inconsistencies might be noticed. These can then be fixed during programming.
 
 1. Start by thinking what the agent is expected to do; what should its behavior be?
